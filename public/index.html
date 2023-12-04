@@ -3,62 +3,33 @@
 <head>
     <title>Hangman</title>
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script type="text/javascript" src="index.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <h1>Hangman</h1>
     <div class="word"></div>
-    <div class="winner"></div>
+    <div class="winner">Herzlichen Glückwunsch <span class="wonBy"></span> 🎉. Neues Spiel startet...</div>
     <script type="text/javascript">
         jQuery(function() {
-            var interval;
-            jQuery.ajax({
-                method: 'GET',
-                url: '/api/status'
-            }).then((data) => {
-                console.log(data);
-                if (data.word === null) {
-                    start();
-                }
+            var hangman = new TwitchHangman();
+            hangman.addEventListener('start', (e) => {
+                console.log(e);
+                jQuery('.word').html(e.detail.word);
+                jQuery('.winner .wonBy').empty();
+                jQuery('.winner').hide();
             });
-
-            var start = function() {
-                jQuery.ajax({
-                    method: 'GET',
-                    url: '/api/start'
-                }).then((data) => {
-                    jQuery('.word').html(data);
-                    jQuery('.winner').empty();
-                    if (! interval) {
-                        interval = setInterval(refresh, 100);
-                    }
-                });
-            };
-
-            var refresh = function() {
-                jQuery.ajax({
-                    method: 'GET',
-                    url: '/api/status'
-                }).then((data) => {
-                    if (data.wonBy) {
-                        finish(data.wonBy, data.solution);
-                    } else {
-                        jQuery('.word').html(data.word);
-                    }
-                });
-            };
-
-            var finish = function(wonBy, solution) {
-                clearInterval(interval);
-                interval = null;
-                jQuery('.word').html(solution);
-                jQuery('.winner').text(`Herzlichen Glückwunsch ${wonBy} 🎉. Neues Spiel startet...`);
-                setTimeout(start, 10000);
-            }
-
-
-            interval = setInterval(refresh, 100);
+            hangman.addEventListener('refresh', (e) => {
+                jQuery('.word').html(e.detail.word);
+            });
+            hangman.addEventListener('finish', (e) => {
+                console.log(e);
+                jQuery('.word').html(e.detail.word);
+                jQuery('.winner .wonBy').text(e.detail.winner);
+                jQuery('.winner').show();
+            });
+            hangman.run();
         });
     </script>
 </body>

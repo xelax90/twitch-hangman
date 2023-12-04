@@ -11,7 +11,7 @@ Word guessing game for twitch chat.
 
 ## Configuration
 
-- The channel name is set in hangman.js on line 9
+- The channel name is set in settings.json on line 2
 - Adjust the word list in wordlist.json
 
 ## Usage

@@ -4,13 +4,16 @@ const WebSocketClient = require('websocket').client;
 const tmi = require('tmi.js');
 const express = require("express");
 const fs = require('fs/promises');
+const fsSync = require('fs');
+
+let settings = JSON.parse(fsSync.readFileSync('settings.json'));
 
 const client = new tmi.Client({
-	channels: [ 'xelax90' ]
+	channels: settings.channels
 });
 
-const hostname = '127.0.0.1';
-const port = 3000;
+const hostname = settings.hostname;
+const port = settings.port;
 
 let wordlist = [];
 let currentWord = null;
@@ -25,7 +28,6 @@ fs.readFile('wordlist.json').then((data) => {
 client.connect();
 
 client.on('message', (channel, tags, message, self) => {
-	// "Alca: Hello, World!"
     if (message.length == 1) {
         guessLetter(message);
     } else {
@@ -69,10 +71,25 @@ const maskedWord = (word, guesses) => {
     if (! word) {
         return null;
     }
-    guessString = guesses.join('');
-    let regex = new RegExp(`[^${guessString}-]`, 'gi');
-    let maskedWord = word.replaceAll(regex, '_');
-    return maskedWord;
+    let guessString = guesses.join('');
+    let guessRegex = new RegExp(`[${guessString}]`, 'i');
+    let regex = new RegExp(settings.allowedLetters, 'i');
+    var result = "";
+    for (var i = 0; i < word.length; i++) {
+        var letter = word.charAt(i);
+
+        if (! letter.match(regex)) {
+            result += letter;
+            continue;
+        }
+        if (letter.match(guessRegex)) {
+            result += letter;
+            continue;
+        }
+
+        result += '_';
+    }
+    return result;
 }
 
 const chooseWord = () => {
@@ -85,7 +102,8 @@ const chooseWord = () => {
 
 const guessLetter = (letter) => {
     letter = letter.charAt(0);
-    if (letter.match(/[a-zA-Z]/g)) {
+    let regex = new RegExp('^'+settings.allowedLetters+'$', 'i');
+    if (letter.match(regex)) {
         if (! currentGuess.includes(letter)) {
             currentGuess.push(letter);
         }

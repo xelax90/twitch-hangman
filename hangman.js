@@ -29,7 +29,7 @@ client.connect();
 
 client.on('message', (channel, tags, message, self) => {
     if (message.length == 1) {
-        guessLetter(message);
+        guessLetter(message, tags['display-name']);
     } else {
         guessWord(message, tags['display-name']);
     }
@@ -48,7 +48,7 @@ app.get("/api/start", (req, res, next) => {
 });
 
 app.get("/api/guess", (req, res, next) => {
-    guessLetter(req.query.guess);
+    guessLetter(req.query.guess, "Web");
     res.json(maskedWord(currentWord, currentGuess));
 });
 
@@ -100,13 +100,16 @@ const chooseWord = () => {
     console.log('Current Word: %s', currentWord);
 }
 
-const guessLetter = (letter) => {
+const guessLetter = (letter, user) => {
     letter = letter.charAt(0);
     let regex = new RegExp('^'+settings.allowedLetters+'$', 'i');
     if (letter.match(regex)) {
         if (! currentGuess.includes(letter)) {
             currentGuess.push(letter);
         }
+    }
+    if (maskedWord(currentWord, currentGuess) == currentWord) {
+        wonBy = user;
     }
 }
 
